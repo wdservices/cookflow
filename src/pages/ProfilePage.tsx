@@ -1,59 +1,132 @@
-import { BookOpen, Heart, Clock, Settings } from "lucide-react";
-import { sampleRecipes } from "@/data/sampleRecipes";
-import { motion } from "framer-motion";
-
-const stats = [
-  { icon: BookOpen, label: "Recipes", value: sampleRecipes.length },
-  { icon: Heart, label: "Favorites", value: sampleRecipes.filter((r) => r.isFavorite).length },
-  { icon: Clock, label: "Cooked", value: 12 },
-];
+import { Ionicons } from "@expo/vector-icons";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useRecipes } from "../context/RecipesContext";
 
 const ProfilePage = () => {
+  const { recipes } = useRecipes();
+  const stats = [
+    { icon: "book-outline", label: "Recipes", value: recipes.length },
+    { icon: "heart-outline", label: "Favorites", value: recipes.filter((r) => r.isFavorite).length },
+    { icon: "time-outline", label: "Cooked", value: 12 },
+  ];
+
   return (
-    <div className="px-5 pt-6 pb-24">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="font-serif text-3xl text-foreground mb-6">Profile</h1>
-      </motion.div>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Text style={styles.title}>Profile</Text>
 
-      <div className="flex flex-col items-center mb-8">
-        <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-3">
-          <span className="text-2xl">👨‍🍳</span>
-        </div>
-        <h2 className="font-serif text-xl text-foreground">Home Chef</h2>
-        <p className="text-sm text-muted-foreground">Member since 2025</p>
-      </div>
+      <View style={styles.avatarWrap}>
+        <View style={styles.avatar}>
+          <Text style={styles.avatarEmoji}>👨‍🍳</Text>
+        </View>
+        <Text style={styles.name}>Home Chef</Text>
+        <Text style={styles.member}>Member since 2025</Text>
+      </View>
 
-      <div className="grid grid-cols-3 gap-3 mb-8">
-        {stats.map((s, i) => (
-          <motion.div
-            key={s.label}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.08 }}
-            className="flex flex-col items-center p-4 rounded-xl bg-card border border-border"
-          >
-            <s.icon size={20} className="text-primary mb-2" />
-            <span className="text-2xl font-bold text-foreground">{s.value}</span>
-            <span className="text-xs text-muted-foreground">{s.label}</span>
-          </motion.div>
+      <View style={styles.statsGrid}>
+        {stats.map((s) => (
+          <View key={s.label} style={styles.statCard}>
+            <Ionicons name={s.icon as never} size={20} color="#2B7A5A" />
+            <Text style={styles.statValue}>{s.value}</Text>
+            <Text style={styles.statLabel}>{s.label}</Text>
+          </View>
         ))}
-      </div>
+      </View>
 
-      <div className="space-y-2">
-        {["Dietary Preferences", "Measurement Units", "Notifications", "About CookFlow"].map(
-          (item, i) => (
-            <button
-              key={item}
-              className="w-full flex items-center justify-between p-4 rounded-xl bg-card border border-border text-left"
-            >
-              <span className="text-sm font-medium text-foreground">{item}</span>
-              <Settings size={16} className="text-muted-foreground" />
-            </button>
-          )
-        )}
-      </div>
-    </div>
+      <View style={styles.settingsList}>
+        {["Dietary Preferences", "Measurement Units", "Notifications", "About CookFlow"].map((item) => (
+          <TouchableOpacity key={item} style={styles.settingsItem} activeOpacity={0.9}>
+            <Text style={styles.settingsText}>{item}</Text>
+            <Ionicons name="settings-outline" size={16} color="#7B8794" />
+          </TouchableOpacity>
+        ))}
+      </View>
+    </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F7F6F2",
+  },
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 32,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#1F2933",
+    marginBottom: 16,
+  },
+  avatarWrap: {
+    alignItems: "center",
+    marginBottom: 24,
+  },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: "#E6F4EE",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 8,
+  },
+  avatarEmoji: {
+    fontSize: 26,
+  },
+  name: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1F2933",
+  },
+  member: {
+    fontSize: 12,
+    color: "#7B8794",
+  },
+  statsGrid: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 24,
+  },
+  statCard: {
+    flex: 1,
+    padding: 14,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E6E8EC",
+    alignItems: "center",
+    gap: 4,
+  },
+  statValue: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#1F2933",
+  },
+  statLabel: {
+    fontSize: 11,
+    color: "#7B8794",
+  },
+  settingsList: {
+    gap: 10,
+  },
+  settingsItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E6E8EC",
+  },
+  settingsText: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#1F2933",
+  },
+});
 
 export default ProfilePage;

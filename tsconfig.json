@@ -1,16 +1,25 @@
 {
-  "files": [],
-  "references": [{ "path": "./tsconfig.app.json" }, { "path": "./tsconfig.node.json" }],
+  "extends": "expo/tsconfig.base",
   "compilerOptions": {
+    "strict": false,
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    },
-    "noImplicitAny": false,
-    "noUnusedParameters": false,
-    "skipLibCheck": true,
-    "allowJs": true,
-    "noUnusedLocals": false,
-    "strictNullChecks": false
-  }
+    }
+  },
+  "include": [
+    "App.tsx",
+    "src/App.tsx",
+    "src/data/**/*.ts",
+    "src/components/RecipeCard.tsx",
+    "src/components/RecipeDetail.tsx",
+    "src/components/CookingMode.tsx",
+    "src/context/**/*.tsx",
+    "src/navigation/**/*.ts",
+    "src/pages/HomePage.tsx",
+    "src/pages/CapturePage.tsx",
+    "src/pages/GroceryPage.tsx",
+    "src/pages/CookPage.tsx",
+    "src/pages/ProfilePage.tsx"
+  ]
 }

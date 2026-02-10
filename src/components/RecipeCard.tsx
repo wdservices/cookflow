@@ -1,64 +1,128 @@
-import { Heart, Clock, Users } from "lucide-react";
-import { Recipe } from "@/data/sampleRecipes";
-import { motion } from "framer-motion";
+import { Ionicons } from "@expo/vector-icons";
+import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Recipe } from "../data/sampleRecipes";
 
-interface RecipeCardProps {
+type RecipeCardProps = {
   recipe: Recipe;
   onToggleFavorite?: (id: string) => void;
-  onClick?: (recipe: Recipe) => void;
-}
+  onPress?: (recipe: Recipe) => void;
+};
 
-const RecipeCard = ({ recipe, onToggleFavorite, onClick }: RecipeCardProps) => {
+const RecipeCard = ({ recipe, onToggleFavorite, onPress }: RecipeCardProps) => {
   return (
-    <motion.div
-      whileTap={{ scale: 0.97 }}
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="rounded-xl overflow-hidden bg-card shadow-sm border border-border cursor-pointer"
-      onClick={() => onClick?.(recipe)}
-    >
-      <div className="relative h-44 overflow-hidden">
-        <img
-          src={recipe.image}
-          alt={recipe.title}
-          className="w-full h-full object-cover"
-          loading="lazy"
-        />
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggleFavorite?.(recipe.id);
-          }}
-          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center"
+    <TouchableOpacity style={styles.card} activeOpacity={0.9} onPress={() => onPress?.(recipe)}>
+      <View style={styles.imageWrap}>
+        <Image source={{ uri: recipe.image }} style={styles.image} resizeMode="cover" />
+        <TouchableOpacity
+          style={styles.favoriteButton}
+          activeOpacity={0.8}
+          onPress={() => onToggleFavorite?.(recipe.id)}
         >
-          <Heart
-            size={18}
-            className={recipe.isFavorite ? "fill-primary text-primary" : "text-muted-foreground"}
-          />
-        </button>
-        <div className="absolute bottom-3 left-3">
-          <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-primary text-primary-foreground">
-            {recipe.difficulty}
-          </span>
-        </div>
-      </div>
-      <div className="p-4">
-        <h3 className="font-serif text-lg text-foreground mb-1">{recipe.title}</h3>
-        <p className="text-sm text-muted-foreground line-clamp-1 mb-3">{recipe.description}</p>
-        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <Clock size={14} />
-            {recipe.cookTime + recipe.prepTime}m
-          </span>
-          <span className="flex items-center gap-1">
-            <Users size={14} />
-            {recipe.servings}
-          </span>
-          <span className="ml-auto text-xs font-medium text-secondary">{recipe.cuisine}</span>
-        </div>
-      </div>
-    </motion.div>
+          <Ionicons name={recipe.isFavorite ? "heart" : "heart-outline"} size={18} color="#2B7A5A" />
+        </TouchableOpacity>
+        <View style={styles.difficultyPill}>
+          <Text style={styles.difficultyText}>{recipe.difficulty}</Text>
+        </View>
+      </View>
+      <View style={styles.content}>
+        <Text style={styles.title} numberOfLines={1}>
+          {recipe.title}
+        </Text>
+        <Text style={styles.description} numberOfLines={1}>
+          {recipe.description}
+        </Text>
+        <View style={styles.metaRow}>
+          <View style={styles.metaItem}>
+            <Ionicons name="time-outline" size={14} color="#7B8794" />
+            <Text style={styles.metaText}>{recipe.cookTime + recipe.prepTime}m</Text>
+          </View>
+          <View style={styles.metaItem}>
+            <Ionicons name="people-outline" size={14} color="#7B8794" />
+            <Text style={styles.metaText}>{recipe.servings}</Text>
+          </View>
+          <Text style={styles.cuisine}>{recipe.cuisine}</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
   );
 };
+
+const styles = StyleSheet.create({
+  card: {
+    borderRadius: 16,
+    overflow: "hidden",
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E6E8EC",
+  },
+  imageWrap: {
+    position: "relative",
+    height: 176,
+    backgroundColor: "#F2F3F5",
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+  },
+  favoriteButton: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.92)",
+  },
+  difficultyPill: {
+    position: "absolute",
+    left: 12,
+    bottom: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    backgroundColor: "#2B7A5A",
+  },
+  difficultyText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  content: {
+    padding: 14,
+  },
+  title: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#1F2933",
+  },
+  description: {
+    marginTop: 4,
+    fontSize: 12,
+    color: "#7B8794",
+  },
+  metaRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 10,
+    gap: 12,
+  },
+  metaItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  metaText: {
+    fontSize: 12,
+    color: "#7B8794",
+  },
+  cuisine: {
+    marginLeft: "auto",
+    fontSize: 12,
+    color: "#2B7A5A",
+    fontWeight: "600",
+  },
+});
 
 export default RecipeCard;

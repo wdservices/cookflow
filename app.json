@@ -1,0 +1,23 @@
+{
+  "expo": {
+    "name": "CookFlow",
+    "slug": "cookflow",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "backgroundColor": "#F7F6F2"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#F7F6F2"
+      }
+    },
+    "plugins": [
+      "expo-font"
+    ]
+  }
+}

@@ -1,59 +1,124 @@
-import { useState } from "react";
-import { Play, ChefHat } from "lucide-react";
-import { sampleRecipes, Recipe } from "@/data/sampleRecipes";
-import CookingMode from "@/components/CookingMode";
-import { motion } from "framer-motion";
+import { Ionicons } from "@expo/vector-icons";
+import { NativeStackNavigationProp } from "@react-navigation/native-stack";
+import { useNavigation } from "@react-navigation/native";
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { useRecipes } from "../context/RecipesContext";
+import { RootStackParamList } from "../navigation/types";
 
 const CookPage = () => {
-  const [activeRecipe, setActiveRecipe] = useState<Recipe | null>(null);
-
-  if (activeRecipe) {
-    return <CookingMode recipe={activeRecipe} onExit={() => setActiveRecipe(null)} />;
-  }
+  const { recipes } = useRecipes();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   return (
-    <div className="px-5 pt-6 pb-24">
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="font-serif text-3xl text-foreground mb-1">Cook</h1>
-        <p className="text-muted-foreground text-sm mb-6">Pick a recipe to start cooking</p>
-      </motion.div>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Text style={styles.title}>Cook</Text>
+      <Text style={styles.subtitle}>Pick a recipe to start cooking</Text>
 
-      <div className="space-y-3">
-        {sampleRecipes.map((recipe, i) => (
-          <motion.button
+      <View style={styles.list}>
+        {recipes.map((recipe) => (
+          <TouchableOpacity
             key={recipe.id}
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.06 }}
-            onClick={() => setActiveRecipe(recipe)}
-            className="w-full flex items-center gap-4 p-3 rounded-xl bg-card border border-border text-left active:scale-[0.98] transition-transform"
+            style={styles.card}
+            activeOpacity={0.9}
+            onPress={() => navigation.navigate("CookingMode", { recipeId: recipe.id })}
           >
-            <img
-              src={recipe.image}
-              alt={recipe.title}
-              className="w-16 h-16 rounded-lg object-cover"
-            />
-            <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-foreground truncate">{recipe.title}</h3>
-              <p className="text-xs text-muted-foreground">
+            <Image source={{ uri: recipe.image }} style={styles.image} />
+            <View style={styles.cardContent}>
+              <Text style={styles.cardTitle} numberOfLines={1}>
+                {recipe.title}
+              </Text>
+              <Text style={styles.cardSubtitle}>
                 {recipe.steps.length} steps · {recipe.cookTime + recipe.prepTime}m
-              </p>
-            </div>
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Play size={18} className="text-primary ml-0.5" />
-            </div>
-          </motion.button>
+              </Text>
+            </View>
+            <View style={styles.playButton}>
+              <Ionicons name="play" size={16} color="#2B7A5A" />
+            </View>
+          </TouchableOpacity>
         ))}
-      </div>
+      </View>
 
-      {sampleRecipes.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-center">
-          <ChefHat size={48} className="text-muted-foreground/40 mb-3" />
-          <p className="text-muted-foreground">No recipes yet. Capture some first!</p>
-        </div>
+      {recipes.length === 0 && (
+        <View style={styles.emptyWrap}>
+          <Ionicons name="restaurant-outline" size={48} color="#CBD2D9" />
+          <Text style={styles.emptyText}>No recipes yet. Capture some first!</Text>
+        </View>
       )}
-    </div>
+    </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#F7F6F2",
+  },
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 32,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: "700",
+    color: "#1F2933",
+  },
+  subtitle: {
+    marginTop: 4,
+    marginBottom: 16,
+    fontSize: 14,
+    color: "#7B8794",
+  },
+  list: {
+    gap: 12,
+  },
+  card: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 12,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E6E8EC",
+  },
+  image: {
+    width: 64,
+    height: 64,
+    borderRadius: 12,
+    backgroundColor: "#EEF0F3",
+  },
+  cardContent: {
+    flex: 1,
+  },
+  cardTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#1F2933",
+  },
+  cardSubtitle: {
+    marginTop: 4,
+    fontSize: 12,
+    color: "#7B8794",
+  },
+  playButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#E6F4EE",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  emptyWrap: {
+    marginTop: 40,
+    alignItems: "center",
+    gap: 12,
+  },
+  emptyText: {
+    fontSize: 13,
+    color: "#7B8794",
+    textAlign: "center",
+  },
+});
 
 export default CookPage;

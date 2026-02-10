@@ -1,22 +1,23 @@
-import { useState, useEffect, useCallback } from "react";
-import { X, ChevronLeft, ChevronRight, Timer, Pause, Play } from "lucide-react";
-import { Recipe } from "@/data/sampleRecipes";
-import { motion, AnimatePresence } from "framer-motion";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Ionicons } from "@expo/vector-icons";
+import { NativeStackScreenProps } from "@react-navigation/native-stack";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { RootStackParamList } from "../navigation/types";
+import { useRecipes } from "../context/RecipesContext";
 
-interface CookingModeProps {
-  recipe: Recipe;
-  onExit: () => void;
-}
+type Props = NativeStackScreenProps<RootStackParamList, "CookingMode">;
 
-const CookingMode = ({ recipe, onExit }: CookingModeProps) => {
+const CookingMode = ({ navigation, route }: Props) => {
+  const { recipes } = useRecipes();
+  const recipe = useMemo(() => recipes.find((r) => r.id === route.params.recipeId), [recipes, route.params.recipeId]);
   const [step, setStep] = useState(0);
   const [timerSeconds, setTimerSeconds] = useState<number | null>(null);
   const [timerRunning, setTimerRunning] = useState(false);
 
-  const currentStep = recipe.steps[step];
+  const currentStep = recipe?.steps[step];
 
   const startTimer = useCallback(() => {
-    if (currentStep.duration) {
+    if (currentStep?.duration) {
       setTimerSeconds(currentStep.duration * 60);
       setTimerRunning(true);
     }
@@ -41,7 +42,7 @@ const CookingMode = ({ recipe, onExit }: CookingModeProps) => {
   };
 
   const next = () => {
-    if (step < recipe.steps.length - 1) {
+    if (recipe && step < recipe.steps.length - 1) {
       setStep(step + 1);
       setTimerSeconds(null);
       setTimerRunning(false);
@@ -56,111 +57,217 @@ const CookingMode = ({ recipe, onExit }: CookingModeProps) => {
     }
   };
 
+  if (!recipe || !currentStep) {
+    return (
+      <View style={styles.emptyWrap}>
+        <Text style={styles.emptyText}>Cooking steps unavailable</Text>
+      </View>
+    );
+  }
+
   return (
-    <div className="fixed inset-0 z-50 bg-foreground flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between px-5 pt-5 pb-3">
-        <button onClick={onExit} className="w-10 h-10 rounded-full bg-card/10 flex items-center justify-center">
-          <X size={20} className="text-background" />
-        </button>
-        <span className="text-background/60 text-sm font-medium">
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.headerButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="close" size={20} color="#F7F6F2" />
+        </TouchableOpacity>
+        <Text style={styles.headerText}>
           Step {step + 1} of {recipe.steps.length}
-        </span>
-        <div className="w-10" />
-      </div>
+        </Text>
+        <View style={styles.headerSpacer} />
+      </View>
 
-      {/* Progress */}
-      <div className="flex gap-1 px-5 mb-6">
-        {recipe.steps.map((_, i) => (
-          <div
-            key={i}
-            className={`h-1 flex-1 rounded-full transition-colors ${
-              i <= step ? "bg-primary" : "bg-card/20"
-            }`}
-          />
+      <View style={styles.progressRow}>
+        {recipe.steps.map((_, index) => (
+          <View key={`step-${index}`} style={[styles.progressBar, index <= step ? styles.progressActive : null]} />
         ))}
-      </div>
+      </View>
 
-      {/* Step Content */}
-      <div className="flex-1 flex flex-col items-center justify-center px-8">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={step}
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            className="text-center"
-          >
-            <p className="text-background text-xl leading-relaxed font-light">
-              {currentStep.instruction}
-            </p>
-          </motion.div>
-        </AnimatePresence>
+      <View style={styles.stepBody}>
+        <Text style={styles.stepText}>{currentStep.instruction}</Text>
 
-        {/* Timer */}
         {currentStep.duration && (
-          <div className="mt-8">
+          <View style={styles.timerWrap}>
             {timerSeconds !== null ? (
-              <div className="flex flex-col items-center gap-3">
-                <span
-                  className={`text-5xl font-mono font-bold ${
-                    timerSeconds === 0 ? "text-primary animate-pulse" : "text-background"
-                  }`}
-                >
+              <View style={styles.timerActive}>
+                <Text style={[styles.timerValue, timerSeconds === 0 ? styles.timerEnded : null]}>
                   {formatTime(timerSeconds)}
-                </span>
-                <button
-                  onClick={() => setTimerRunning(!timerRunning)}
-                  className="w-12 h-12 rounded-full bg-primary flex items-center justify-center"
-                >
-                  {timerRunning ? (
-                    <Pause size={20} className="text-primary-foreground" />
-                  ) : (
-                    <Play size={20} className="text-primary-foreground ml-0.5" />
-                  )}
-                </button>
-              </div>
+                </Text>
+                <TouchableOpacity style={styles.timerButton} onPress={() => setTimerRunning(!timerRunning)}>
+                  <Ionicons name={timerRunning ? "pause" : "play"} size={20} color="#0B0F1A" />
+                </TouchableOpacity>
+              </View>
             ) : (
-              <button
-                onClick={startTimer}
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary text-primary-foreground text-sm font-medium"
-              >
-                <Timer size={16} />
-                Start {currentStep.duration}m timer
-              </button>
+              <TouchableOpacity style={styles.timerStart} onPress={startTimer}>
+                <Ionicons name="timer-outline" size={16} color="#0B0F1A" />
+                <Text style={styles.timerStartText}>Start {currentStep.duration}m timer</Text>
+              </TouchableOpacity>
             )}
-          </div>
+          </View>
         )}
-      </div>
+      </View>
 
-      {/* Navigation */}
-      <div className="flex items-center justify-between px-8 pb-10">
-        <button
-          onClick={prev}
-          disabled={step === 0}
-          className="w-14 h-14 rounded-full bg-card/10 flex items-center justify-center disabled:opacity-20"
-        >
-          <ChevronLeft size={24} className="text-background" />
-        </button>
+      <View style={styles.navRow}>
+        <TouchableOpacity style={[styles.circleButton, step === 0 ? styles.disabledButton : null]} onPress={prev}>
+          <Ionicons name="chevron-back" size={24} color="#F7F6F2" />
+        </TouchableOpacity>
         {step === recipe.steps.length - 1 ? (
-          <button
-            onClick={onExit}
-            className="px-8 py-3 rounded-full bg-secondary text-secondary-foreground font-semibold"
-          >
-            Done!
-          </button>
+          <TouchableOpacity style={styles.doneButton} onPress={() => navigation.goBack()}>
+            <Text style={styles.doneText}>Done!</Text>
+          </TouchableOpacity>
         ) : (
-          <button
-            onClick={next}
-            className="w-14 h-14 rounded-full bg-primary flex items-center justify-center"
-          >
-            <ChevronRight size={24} className="text-primary-foreground" />
-          </button>
+          <TouchableOpacity style={styles.circleButtonPrimary} onPress={next}>
+            <Ionicons name="chevron-forward" size={24} color="#0B0F1A" />
+          </TouchableOpacity>
         )}
-        <div className="w-14" />
-      </div>
-    </div>
+        <View style={styles.headerSpacer} />
+      </View>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#0B0F1A",
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingTop: 20,
+    paddingBottom: 12,
+  },
+  headerButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.1)",
+  },
+  headerText: {
+    color: "rgba(247,246,242,0.75)",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  headerSpacer: {
+    width: 40,
+  },
+  progressRow: {
+    flexDirection: "row",
+    gap: 6,
+    paddingHorizontal: 20,
+    marginBottom: 12,
+  },
+  progressBar: {
+    flex: 1,
+    height: 4,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.12)",
+  },
+  progressActive: {
+    backgroundColor: "#2B7A5A",
+  },
+  stepBody: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 32,
+  },
+  stepText: {
+    color: "#F7F6F2",
+    fontSize: 20,
+    fontWeight: "300",
+    textAlign: "center",
+    lineHeight: 28,
+  },
+  timerWrap: {
+    marginTop: 24,
+    alignItems: "center",
+  },
+  timerActive: {
+    alignItems: "center",
+    gap: 12,
+  },
+  timerValue: {
+    fontSize: 48,
+    fontWeight: "700",
+    color: "#F7F6F2",
+  },
+  timerEnded: {
+    color: "#2B7A5A",
+  },
+  timerButton: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#2B7A5A",
+  },
+  timerStart: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: "#2B7A5A",
+  },
+  timerStartText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#0B0F1A",
+  },
+  navRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 28,
+    paddingBottom: 32,
+  },
+  circleButton: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.1)",
+  },
+  circleButtonPrimary: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#2B7A5A",
+  },
+  disabledButton: {
+    opacity: 0.3,
+  },
+  doneButton: {
+    paddingHorizontal: 28,
+    paddingVertical: 12,
+    borderRadius: 999,
+    backgroundColor: "#F7F6F2",
+  },
+  doneText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#0B0F1A",
+  },
+  emptyWrap: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#0B0F1A",
+  },
+  emptyText: {
+    color: "rgba(247,246,242,0.7)",
+    fontSize: 14,
+  },
+});
 
 export default CookingMode;
