@@ -6,8 +6,19 @@ export type TabParamList = {
   Profile: undefined;
 };
 
+export type DrawerParamList = {
+  Home: undefined;
+  Capture: undefined;
+  Grocery: undefined;
+  Cook: undefined;
+  Profile: undefined;
+  Chatbot: undefined;
+};
+
 export type RootStackParamList = {
-  Tabs: undefined;
+  Login: undefined;
+  Signup: undefined;
+  Drawer: undefined;
   RecipeDetail: { recipeId: string };
   CookingMode: { recipeId: string };
 };

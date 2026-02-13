@@ -3,6 +3,7 @@ module.exports = {
   extends: "expo",
   ignorePatterns: [
     "src/components/ui/**",
+    "src/components/AppSidebar.tsx",
     "src/components/BottomTabs.tsx",
     "src/components/NavLink.tsx",
     "src/hooks/**",

@@ -1,9 +1,10 @@
 {
   "expo": {
-    "name": "CookFlow",
+    "name": "Cookflow",
     "slug": "cookflow",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./public/logo.png",
     "userInterfaceStyle": "light",
     "splash": {
       "backgroundColor": "#F7F6F2"
@@ -12,12 +13,32 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.cookflow",
       "adaptiveIcon": {
+        "foregroundImage": "./public/logo.png",
         "backgroundColor": "#F7F6F2"
       }
     },
+    "web": {
+      "favicon": "./public/logo.png"
+    },
     "plugins": [
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "firebase": {
+        "apiKey": "AIzaSyBN2CcpjrCPm0dy300UT3SOnr-y1iazv4Y",
+        "authDomain": "cookflow-8b674.firebaseapp.com",
+        "projectId": "cookflow-8b674",
+        "storageBucket": "cookflow-8b674.firebasestorage.app",
+        "messagingSenderId": "82299497132",
+        "appId": "1:82299497132:web:6efdf48bd38b5dec758d09",
+        "databaseURL": ""
+      },
+      "eas": {
+        "projectId": "850fda31-85b1-47da-916f-df497e0a3237"
+      }
+    },
+    "owner": "wdservices"
   }
 }
