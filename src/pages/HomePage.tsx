@@ -2,13 +2,16 @@ import { useMemo, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { useNavigation } from "@react-navigation/native";
-import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ScrollView, StyleSheet, Text, TextInput, View, TouchableOpacity } from "react-native";
 import RecipeCard from "../components/RecipeCard";
+import FloatingChatbotButton from "../components/FloatingChatbotButton";
 import { useRecipes } from "../context/RecipesContext";
+import { useGrocery } from "../context/GroceryContext";
 import { RootStackParamList } from "../navigation/types";
 
 const HomePage = () => {
   const { recipes, toggleFavorite } = useRecipes();
+  const { lists } = useGrocery();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [search, setSearch] = useState("");
 
@@ -25,7 +28,8 @@ const HomePage = () => {
   const favorites = filtered.filter((r) => r.isFavorite);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <View style={{ flex: 1 }}>
+      <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>CookFlow</Text>
       <Text style={styles.subtitle}>What are we cooking today?</Text>
 
@@ -71,8 +75,38 @@ const HomePage = () => {
           ))}
         </View>
       </View>
+
+      {lists.length > 0 && (
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Recent Grocery Lists</Text>
+            <TouchableOpacity onPress={() => navigation.navigate("Grocery" as any)}>
+              <Text style={styles.seeAll}>See All</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalList}>
+            {lists.slice(0, 3).map((list) => (
+              <TouchableOpacity 
+                key={list.id} 
+                style={styles.groceryCard}
+                onPress={() => navigation.navigate("Grocery" as any)}
+              >
+                <View style={styles.groceryIcon}>
+                  <Ionicons name="cart" size={20} color="#FF7A59" />
+                </View>
+                <View>
+                  <Text style={styles.groceryTitle}>{list.title}</Text>
+                  <Text style={styles.groceryCount}>{list.items.length} items</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+      )}
     </ScrollView>
-  );
+    <FloatingChatbotButton />
+  </View>
+);
 };
 
 const styles = StyleSheet.create({
@@ -131,6 +165,47 @@ const styles = StyleSheet.create({
   },
   gridItem: {
     width: "100%",
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  seeAll: {
+    fontSize: 14,
+    color: "#FF7A59",
+    fontWeight: "600",
+  },
+  groceryCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 16,
+    borderRadius: 16,
+    backgroundColor: "#FFFFFF",
+    borderWidth: 1,
+    borderColor: "#E6E8EC",
+    marginRight: 12,
+    minWidth: 200,
+  },
+  groceryIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#FFF0E6",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  groceryTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#1F2933",
+  },
+  groceryCount: {
+    fontSize: 13,
+    color: "#7B8794",
+    marginTop: 2,
   },
 });
 

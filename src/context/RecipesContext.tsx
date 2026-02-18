@@ -51,8 +51,8 @@ export const RecipesProvider = ({ children }: { children: ReactNode }) => {
 
         // Sort manually to avoid composite index requirement
         const sortedRecipes = [...fetchedRecipes].sort((a, b) => {
-          const timeA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const timeB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          const timeA = (a as any).createdAt ? new Date((a as any).createdAt).getTime() : 0;
+          const timeB = (b as any).createdAt ? new Date((b as any).createdAt).getTime() : 0;
           return timeB - timeA;
         });
 
@@ -76,17 +76,29 @@ export const RecipesProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const addRecipe = (recipe: Recipe) => {
+    console.log("📝 [RecipesContext] Adding recipe:", recipe);
+    
     if (!db || !isFirebaseConfigured || !user) {
+      console.log("📝 [RecipesContext] Adding to local state only");
       setRecipes((prev) => [recipe, ...prev]);
       return;
     }
+    
     void (async () => {
-      const { id: _id, ...data } = recipe;
-      await addDoc(collection(db, "recipes"), {
-        ...data,
-        userId: user.uid,
-        createdAt: new Date().toISOString(),
-      });
+      try {
+        console.log("📝 [RecipesContext] Adding to Firestore");
+        const { id: _id, ...data } = recipe;
+        await addDoc(collection(db, "recipes"), {
+          ...data,
+          userId: user.uid,
+          createdAt: new Date().toISOString(),
+        });
+        console.log("✅ [RecipesContext] Recipe added to Firestore");
+      } catch (error) {
+        console.error("❌ [RecipesContext] Failed to add to Firestore:", error);
+        // Fallback to local state
+        setRecipes((prev) => [recipe, ...prev]);
+      }
     })();
   };
 

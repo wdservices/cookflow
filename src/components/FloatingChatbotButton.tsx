@@ -9,7 +9,7 @@ const FloatingChatbotButton: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   const navigateToChatbot = () => {
-    navigation.navigate("Drawer", { screen: "Chatbot" });
+    navigation.navigate("Drawer" as any);
   };
 
   return (

@@ -3,7 +3,7 @@ import { useNavigation } from "@react-navigation/native";
 import { NativeStackNavigationProp } from "@react-navigation/native-stack";
 import { LinearGradient } from "expo-linear-gradient";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
-import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View, ScrollView, ImageBackground } from "react-native";
+import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View, ScrollView, ImageBackground, Platform, ViewStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { auth, isFirebaseConfigured } from "../lib/firebase";
 import { RootStackParamList } from "../navigation/types";
@@ -150,6 +150,16 @@ const SignupPage = () => {
   );
 };
 
+const cardShadow = Platform.OS === "web"
+  ? ({ boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.08)" } as ViewStyle)
+  : {
+      shadowColor: "#000",
+      shadowOpacity: 0.1,
+      shadowRadius: 10,
+      shadowOffset: { width: 0, height: 4 },
+      elevation: 3,
+    };
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -187,7 +197,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#F3D2C3",
     gap: 14,
-    boxShadow: "0px 4px 10px rgba(0, 0, 0, 0.08)",
+    ...cardShadow,
   },
   cardTitle: {
     fontSize: 20,

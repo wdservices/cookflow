@@ -47,6 +47,13 @@ const ChatbotPage: React.FC = () => {
   const [currentAttachment, setCurrentAttachment] = useState<Attachment | null>(null);
   const scrollViewRef = useRef<ScrollView>(null);
 
+  // Verify API key on mount
+  React.useEffect(() => {
+    console.log("🚀 [Chatbot] Component mounted");
+    console.log("🔑 [Chatbot] API Key check:", GEMINI_API_KEY ? "✅ Present" : "❌ Missing");
+    console.log("🔑 [Chatbot] API Key length:", GEMINI_API_KEY?.length || 0);
+  }, []);
+
   const scrollToBottom = () => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
   };
@@ -140,56 +147,88 @@ const ChatbotPage: React.FC = () => {
   };
 
   const callGemini = async (promptText: string, attachment: Attachment | null): Promise<string> => {
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+    console.log("🤖 [Chatbot] Starting AI call with prompt:", promptText.substring(0, 100));
+    console.log("🤖 [Chatbot] API Key exists:", !!GEMINI_API_KEY);
+    console.log("🤖 [Chatbot] Attachment:", attachment?.type);
+    
+    // Use same endpoint as working gemini.ts
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
 
-    const contents: any[] = [
-      {
-        parts: [{ text: promptText }],
-      },
+    // Build parts array like in gemini.ts
+    const parts: any[] = [
+      { text: SYSTEM_PROMPT },
+      { text: promptText },
     ];
 
     if (attachment) {
       if (attachment.type === "image" && attachment.base64) {
-        contents[0].parts.push({
-          inlineData: {
-            mimeType: attachment.mimeType || "image/jpeg",
+        parts.push({
+          inline_data: {
+            mime_type: attachment.mimeType || "image/jpeg",
             data: attachment.base64,
           },
         });
       } else if (attachment.type === "link") {
-        contents[0].parts[0].text += `\n\nContext link to analyze: ${attachment.value}`;
+        parts[1].text += `\n\nContext link to analyze: ${attachment.value}`;
       }
     }
 
     const payload = {
-      contents,
-      systemInstruction: {
-        parts: [{ text: SYSTEM_PROMPT }],
-      },
+      contents: [{
+        parts: parts,
+      }],
     };
 
     // Retry logic
     for (let i = 0; i < 3; i++) {
       try {
+        console.log(`🤖 [Chatbot] Attempt ${i + 1} - Sending request to Gemini...`);
+        console.log("🤖 [Chatbot] Payload:", JSON.stringify(payload, null, 2));
+        
         const response = await fetch(url, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
 
+        console.log("🤖 [Chatbot] Response status:", response.status);
+
         if (!response.ok) {
-          throw new Error(`API Error: ${response.status}`);
+          const errorText = await response.text();
+          console.error("🤖 [Chatbot] API Error Response:", errorText);
+          
+          // Check for quota error
+          if (response.status === 429 || errorText.toLowerCase().includes("quota")) {
+            console.warn("⚠️ [Chatbot] API quota exceeded. Using fallback response.");
+            return "I'm currently experiencing high demand. Please try again in a few minutes, or ask me a simpler question!";
+          }
+          
+          throw new Error(`API Error: ${response.status} - ${errorText}`);
         }
 
         const data = await response.json();
+        console.log("🤖 [Chatbot] Raw response:", data);
+        
         let responseText =
           data.candidates?.[0]?.content?.parts?.[0]?.text ||
           "I couldn't process that. Try asking differently!";
 
+        console.log("🤖 [Chatbot] Extracted response:", responseText.substring(0, 100));
+
         // Remove asterisks
         return responseText.replace(/\*/g, "");
       } catch (err) {
-        if (i === 2) throw err;
+        console.error("🤖 [Chatbot] Detailed error:", err);
+        if (i === 2) {
+          // Log the final error with more details
+          console.error("🤖 [Chatbot] Final attempt failed. Error details:", {
+            message: err.message,
+            stack: err.stack,
+            name: err.name,
+          });
+          throw err;
+        }
+        console.log(`🤖 [Chatbot] Retrying in ${Math.pow(2, i) * 1000}ms...`);
         await new Promise((r) => setTimeout(r, Math.pow(2, i) * 1000));
       }
     }
@@ -199,7 +238,12 @@ const ChatbotPage: React.FC = () => {
 
   const handleSend = async () => {
     const text = inputText.trim();
-    if (!text && !currentAttachment) return;
+    console.log("📤 [Chatbot] Send button pressed. Text:", text, "Attachment:", currentAttachment?.type);
+    
+    if (!text && !currentAttachment) {
+      console.log("📤 [Chatbot] No content to send, returning");
+      return;
+    }
 
     const userDisplay = text || (currentAttachment?.type === "link" ? "Analyze this link" : "Analyze this image");
     addMessage(userDisplay, "user");
@@ -210,10 +254,12 @@ const ChatbotPage: React.FC = () => {
     setIsLoading(true);
 
     try {
+      console.log("📤 [Chatbot] Calling AI with:", text || "Please look at this and help me with a recipe.");
       const aiResponse = await callGemini(text || "Please look at this and help me with a recipe.", savedAttachment);
+      console.log("📤 [Chatbot] AI responded successfully");
       addMessage(aiResponse, "bot");
     } catch (err) {
-      console.error("Chatbot error:", err);
+      console.error("📤 [Chatbot] Error in handleSend:", err);
       addMessage("Sorry, I'm having trouble connecting to the kitchen right now. Please try again.", "bot");
     } finally {
       setIsLoading(false);
@@ -335,7 +381,7 @@ const ChatbotPage: React.FC = () => {
               placeholder="Type a message..."
               placeholderTextColor="#999"
               multiline
-              maxHeight={100}
+              onSubmitEditing={handleSend}
             />
             <TouchableOpacity
               style={[styles.sendButton, (!inputText.trim() && !currentAttachment) && styles.sendButtonDisabled]}

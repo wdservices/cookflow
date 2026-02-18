@@ -9,10 +9,14 @@ type RecipeCardProps = {
 };
 
 const RecipeCard = ({ recipe, onToggleFavorite, onPress }: RecipeCardProps) => {
+  const imageSource = recipe.image 
+    ? { uri: recipe.image } 
+    : { uri: "https://via.placeholder.com/300x200/FF7A59/FFFFFF?text=Recipe" };
+
   return (
     <TouchableOpacity style={styles.card} activeOpacity={0.9} onPress={() => onPress?.(recipe)}>
       <View style={styles.imageWrap}>
-        <Image source={{ uri: recipe.image }} style={styles.image} resizeMode="cover" />
+        <Image source={imageSource} style={styles.image} resizeMode="cover" />
         <TouchableOpacity
           style={styles.favoriteButton}
           activeOpacity={0.8}

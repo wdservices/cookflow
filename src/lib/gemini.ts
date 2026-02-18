@@ -96,10 +96,31 @@ export const analyzeRecipeImage = async (base64Image: string): Promise<Partial<R
 
 export const analyzeRecipeText = async (inputText: string): Promise<Partial<Recipe>> => {
   const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`;
-  const prompt = `Extract recipe from this text/URL: ${inputText}`;
-
+  
   try {
     console.log("🤖 [Gemini] Analyzing text/URL...");
+    
+    let contentToAnalyze = inputText;
+    
+    // If it's a URL, try to fetch its content
+    if (inputText.startsWith('http')) {
+      try {
+        console.log("🌐 [Gemini] Fetching content from URL...");
+        const response = await fetch(`https://r.jina.ai/http://${inputText.replace('https://', '').replace('http://', '')}`);
+        if (response.ok) {
+          const textContent = await response.text();
+          contentToAnalyze = `URL: ${inputText}\n\nContent: ${textContent}`;
+          console.log("📄 [Gemini] Successfully fetched URL content");
+        } else {
+          console.warn("⚠️ [Gemini] Could not fetch URL, analyzing URL directly");
+        }
+      } catch (fetchError) {
+        console.warn("⚠️ [Gemini] URL fetch failed, analyzing URL directly");
+      }
+    }
+    
+    const prompt = `Extract recipe from this text/URL: ${contentToAnalyze}`;
+    
     const response = await fetch(GEMINI_API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
